@@ -6,12 +6,12 @@ public class MLP {
     private double taxa_aprendizado = 0.3;
     private double[][] pesos_PrimeiraCamada;
     private double[] pesos_SegundaCamada;
-    private int numNeuronios_PrimeiraCamada;
+    private int numNeuronios_CamadaOculta;
     private int numNeuronios_Entrada;
     private int epocas = 0;
 
-    public MLP(int numNeuronios_PrimeiraCamada, int numNeuronios_Entrada) {
-        this.numNeuronios_PrimeiraCamada = numNeuronios_PrimeiraCamada;
+    public MLP(int numNeuronios_CamadaOculta, int numNeuronios_Entrada) {
+        this.numNeuronios_CamadaOculta = numNeuronios_CamadaOculta;
         this.numNeuronios_Entrada = numNeuronios_Entrada;
         calcularPesos();
     }
@@ -67,7 +67,7 @@ public class MLP {
     }
 
     private double[] saidaTreinamento_PrimeiraCamada(double[][] conjuntoTreinamento, int i) {
-        double[] saidasPrimeiraCamada = new double[numNeuronios_PrimeiraCamada];
+        double[] saidasPrimeiraCamada = new double[numNeuronios_CamadaOculta];
         for (int j = 0; j < pesos_PrimeiraCamada.length; j++) {
             double u = 0;
             for (int k = 0; k < pesos_PrimeiraCamada[j].length; k++) {
@@ -79,7 +79,7 @@ public class MLP {
     }
 
     private double[] saidaClassificacao_PrimeiraCamada(double[] entrada) {
-        double[] saidasPrimeiraCamada = new double[numNeuronios_PrimeiraCamada];
+        double[] saidasPrimeiraCamada = new double[numNeuronios_CamadaOculta];
         for (int i = 0; i < pesos_PrimeiraCamada.length; i++) {
             double u = 0;
             for (int j = 0; j< pesos_PrimeiraCamada[i].length; j++) {
@@ -127,14 +127,14 @@ public class MLP {
     }
 
     private void calcularPesos() {
-        pesos_PrimeiraCamada = new double[numNeuronios_PrimeiraCamada][numNeuronios_Entrada];
+        pesos_PrimeiraCamada = new double[numNeuronios_CamadaOculta][numNeuronios_Entrada];
         for (int i = 0; i < pesos_PrimeiraCamada.length; i++) {
             for (int j = 0; j < pesos_PrimeiraCamada[i].length; j++) {
                 pesos_PrimeiraCamada[i][j] = Math.random();
             }
         }
         
-        pesos_SegundaCamada = new double[numNeuronios_PrimeiraCamada + 1];
+        pesos_SegundaCamada = new double[numNeuronios_CamadaOculta + 1];
         for (int i = 0; i < pesos_SegundaCamada.length; i++) {
             pesos_SegundaCamada[i] = Math.random();
         }

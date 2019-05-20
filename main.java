@@ -15,10 +15,10 @@ public class main {
 
     public static void main(String[] args) throws FileNotFoundException {
 
-        int numNeuronios_PrimeiraCamada = 4;
-        int numNeuronios_Entrada = 4;
+        int numNeuronios_CamadaOculta = 6; //valor "n" qualquer
+        int numNeuronios_Entrada = 4; //valor fixo
 
-        MLP rede_neural = new MLP(numNeuronios_PrimeiraCamada, numNeuronios_Entrada);
+        MLP rede_neural = new MLP(numNeuronios_CamadaOculta, numNeuronios_Entrada);
 
         rede_neural.treinar(treino, resultados_esperados);
 
