@@ -1,175 +1,160 @@
+
 import java.util.Arrays;
 
-public class MLP{
+public class MLP {
 
-	private static double taxa_aprendizado = 0.03;
+    private double taxa_aprendizado = 0.3;
+    private double[][] pesos_PrimeiraCamada;
+    private double[] pesos_SegundaCamada;
+    private int numNeuronios_PrimeiraCamada;
+    private int numNeuronios_Entrada;
+    private int epocas = 0;
 
-	private double[][] conexoesPrimeiraCamada;
-	private double[] conexoesSegundaCamada;
-	private int nrNeuroniosPrimeiraCamada;
-	private int nrNeuroniosEntrada;
-	private int epocas = 0;
-	
-	public MLP(int nrNeuroniosPrimeiraCamada, int nrNeuroniosEntrada) {
-		this.nrNeuroniosPrimeiraCamada = nrNeuroniosPrimeiraCamada;
-		this.nrNeuroniosEntrada = nrNeuroniosEntrada;
-		this.inicializarConexoesSinapticasDaRede();
-	}
+    public MLP(int numNeuronios_PrimeiraCamada, int numNeuronios_Entrada) {
+        this.numNeuronios_PrimeiraCamada = numNeuronios_PrimeiraCamada;
+        this.numNeuronios_Entrada = numNeuronios_Entrada;
+        calcularPesos();
+    }
 
-	public void treinar(double[][] conjuntoTreinamento, double[] valoresEsperados) {
-		double erro = 1.0;
-		while ((Math.abs(erro) > 0.05) && (epocas < 100000)) {
-			for (int i = 0; i < conjuntoTreinamento[0].length; i++) {
-				double[] entradaSegundaCamada = propagarSinalPelaPrimeiraCamada(conjuntoTreinamento, i);
-				double valorSaida = propagarSinalPelaSegundaCamada(entradaSegundaCamada);
-				erro = calcularErro(valoresEsperados, valorSaida, i);
-				double gradiente = getGradienteDeRetropopagacao(valorSaida, erro);
-				aprender(conjuntoTreinamento, entradaSegundaCamada, gradiente, i);
-			}
-			epocas++;
-		}
-	}
+    public void treinar(double[][] conjuntoTreinamento, double[] valoresEsperados) {
+        double erro = 1;
+        while ((Math.abs(erro) > 0.01) && (epocas < 10000)) {
+            for (int i = 0; i < conjuntoTreinamento[0].length; i++) {
+                double[] entradaSegundaCamada = propagation_PrimeiraCamada(conjuntoTreinamento, i);
+                double valorSaida = propagation_SegundaCamada(entradaSegundaCamada);
+                erro = calcularErro(valoresEsperados[i], valorSaida);
+                double g = gradiente(valorSaida, erro);
+                aprender(conjuntoTreinamento, entradaSegundaCamada, g, i);
+            }
+            epocas++;
+        }
+    }
 
-	public void classificar(double[] entrada) {
-		if (epocas > 99999) {
-			System.out.println("Nao foi possivel atingir um ponto de convergencia, verifique os parametros e a estrutura da rede.");
-		} else {
-			double[] saidasPrimeiraCamada = getSaidaClassificacaoPrimeiraCamada(entrada);
-			double[] entradaSegundaCamada = getEntradasSegundaCamada(saidasPrimeiraCamada);
-			double y = propagarSinalPelaSegundaCamada(entradaSegundaCamada);
-			long value = Math.round(y);
-			System.out.println(value);
-		}
-	}
+    public void classificar(double[] entrada) {
+        if (epocas > 9999) {
+            System.out.println("Nao foi possivel atingir um ponto de convergencia!");
+        } else {
+            double[] saidasPrimeiraCamada = saidaClassificacao_PrimeiraCamada(entrada);
+            double[] entradaSegundaCamada = entradas_SegundaCamada(saidasPrimeiraCamada);
+            double y = propagation_SegundaCamada(entradaSegundaCamada);
+            int saida = (int) Math.round(y);
+            System.out.println(saida);
+        }
+    }
 
-	private void aprender(double[][] conjuntoTreinamento, double[] entradaSegundaCamada, double gradiente, int i) {
-		retropropagarErroPelaSegundaCamada(entradaSegundaCamada, gradiente);
-		retropropagarErroPelaPrimeiraCamada(conjuntoTreinamento, entradaSegundaCamada, gradiente, i);
-	}
+    private void aprender(double[][] conjuntoTreinamento, double[] entradaSegundaCamada, double gradiente, int i) {
+        backpropagation_PrimeiraCamada(conjuntoTreinamento, entradaSegundaCamada, gradiente, i);
+        backpropagation_SegundaCamada(entradaSegundaCamada, gradiente);
+    }
 
-	private double[] propagarSinalPelaPrimeiraCamada(double[][] conjuntoTreinamento, int i) {
-		double[] saidasPrimeiraCamada = getSaidaTreinamentoPrimeiraCamada(conjuntoTreinamento, i);
-		return getEntradasSegundaCamada(saidasPrimeiraCamada);
-	}
+    private double[] propagation_PrimeiraCamada(double[][] conjuntoTreinamento, int i) {
+        double[] saidasPrimeiraCamada = saidaTreinamento_PrimeiraCamada(conjuntoTreinamento, i);
+        return entradas_SegundaCamada(saidasPrimeiraCamada);
+    }
 
-	private double propagarSinalPelaSegundaCamada(double[] entradaSegundaCamada) {
-		double u = 0;
-		for (int j = 0; j < conexoesSegundaCamada.length; j++) {
-			u += entradaSegundaCamada[j] * conexoesSegundaCamada[j];
-		}
-		return getFuncaoTransferencia(u);
-	}
+    private double propagation_SegundaCamada(double[] entradaSegundaCamada) {
+        double u = 0;
+        for (int i = 0; i< pesos_SegundaCamada.length; i++) {
+            u += entradaSegundaCamada[i] * pesos_SegundaCamada[i];
+        }
+        return sigmoide(u);
+    }
 
-	private double[] getEntradasSegundaCamada(double[] saidasPrimeiraCamada) {
-		double[] entradaSegundaCamada = Arrays.copyOf(saidasPrimeiraCamada, saidasPrimeiraCamada.length + 1);
-		entradaSegundaCamada[entradaSegundaCamada.length - 1] = 1.0;
-		return entradaSegundaCamada;
-	}
+    private double[] entradas_SegundaCamada(double[] saidasPrimeiraCamada) {
+        double[] entradaSegundaCamada = Arrays.copyOf(saidasPrimeiraCamada, saidasPrimeiraCamada.length + 1);
+        entradaSegundaCamada[entradaSegundaCamada.length - 1] = 1.0;
+        return entradaSegundaCamada;
+    }
 
-	private double[] getSaidaTreinamentoPrimeiraCamada(double[][] conjuntoTreinamento, int i) {
-		double[] saidasPrimeiraCamada = new double[nrNeuroniosPrimeiraCamada];
-		for (int j = 0; j < conexoesPrimeiraCamada.length; j++) {
-			double u = 0;
-			for (int k = 0; k < conexoesPrimeiraCamada[j].length; k++) {
-				u += conjuntoTreinamento[k][i] * conexoesPrimeiraCamada[j][k];
-			}
-			saidasPrimeiraCamada[j] = getFuncaoTransferencia(u);
-		}
-		return saidasPrimeiraCamada;
-	}
+    private double[] saidaTreinamento_PrimeiraCamada(double[][] conjuntoTreinamento, int i) {
+        double[] saidasPrimeiraCamada = new double[numNeuronios_PrimeiraCamada];
+        for (int j = 0; j < pesos_PrimeiraCamada.length; j++) {
+            double u = 0;
+            for (int k = 0; k < pesos_PrimeiraCamada[j].length; k++) {
+                u += conjuntoTreinamento[k][i] * pesos_PrimeiraCamada[j][k];
+            }
+            saidasPrimeiraCamada[j] = sigmoide(u);
+        }
+        return saidasPrimeiraCamada;
+    }
 
-	private double[] getSaidaClassificacaoPrimeiraCamada(double[] entrada) {
-		double[] saidasPrimeiraCamada = new double[nrNeuroniosPrimeiraCamada];
-		for (int j = 0; j < conexoesPrimeiraCamada.length; j++) {
-			double u = 0;
-			for (int k = 0; k < conexoesPrimeiraCamada[j].length; k++) {
-				u += entrada[k] * conexoesPrimeiraCamada[j][k];
-			}
-			saidasPrimeiraCamada[j] = getFuncaoTransferencia(u);
-		}
-		return saidasPrimeiraCamada;
-	}
+    private double[] saidaClassificacao_PrimeiraCamada(double[] entrada) {
+        double[] saidasPrimeiraCamada = new double[numNeuronios_PrimeiraCamada];
+        for (int i = 0; i < pesos_PrimeiraCamada.length; i++) {
+            double u = 0;
+            for (int j = 0; j< pesos_PrimeiraCamada[i].length; j++) {
+                u += entrada[j] * pesos_PrimeiraCamada[i][j];
+            }
+            saidasPrimeiraCamada[i] = sigmoide(u);
+        }
+        return saidasPrimeiraCamada;
+    }
 
-	private void retropropagarErroPelaPrimeiraCamada(double[][] conjuntoTreinamento, double[] entradaSegundaCamada, double gradiente, int i) {
-		for (int j = 0; j < entradaSegundaCamada.length - 1; j++) {
-			double derivadaFuncaoTransferencia = entradaSegundaCamada[j] * (1.0 - entradaSegundaCamada[j]);
-			double sigma = derivadaFuncaoTransferencia * (conexoesSegundaCamada[j] * gradiente);
-			for (int k = 0; k < conexoesPrimeiraCamada[j].length; k++) {
-				conexoesPrimeiraCamada[j][k] += MLP.taxa_aprendizado * sigma * conjuntoTreinamento[k][i];
-			}
-		}
-	}
+    private void backpropagation_PrimeiraCamada(double[][] conjuntoTreinamento, double[] entradaSegundaCamada, double gradiente, int i) {
+        for (int j = 0; j < entradaSegundaCamada.length - 1; j++) {
+            double derivada = derivada_sigmoide(entradaSegundaCamada[j]);
+            double sigma = derivada * (pesos_SegundaCamada[j] * gradiente);
+            for (int k = 0; k < pesos_PrimeiraCamada[j].length; k++) {
+                pesos_PrimeiraCamada[j][k] += taxa_aprendizado * sigma * conjuntoTreinamento[k][i];
+            }
+        }
+    }
 
-	private void retropropagarErroPelaSegundaCamada(double[] entradaSegundaCamada, double gradiente) {
-		for (int j = 0; j < conexoesSegundaCamada.length; j++) {
-			conexoesSegundaCamada[j] += MLP.taxa_aprendizado * entradaSegundaCamada[j] * gradiente;
-		}
-	}
+    private void backpropagation_SegundaCamada(double[] entradaSegundaCamada, double gradiente) {
+        for (int i = 0; i < pesos_SegundaCamada.length; i++) {
+            pesos_SegundaCamada[i] += taxa_aprendizado * entradaSegundaCamada[i] * gradiente;
+        }
+    }
 
-	private double getGradienteDeRetropopagacao(double valorSaida, double erro) {
-		return valorSaida * (1 - valorSaida) * erro;
-	}
+    private double gradiente(double valorSaida, double erro) {
+        return valorSaida * (1 - valorSaida) * erro;
+    }
 
-	private double getFuncaoTransferencia(double u) {
-		return 1.0 / (1.0 + Math.exp(-u));
-	}
+    public int num_Epocas() {
+        return epocas;
+    }
 
-	private double calcularErro(double[] valoresEsperados, double valorSaida, int i) {
-		return valoresEsperados[i] - valorSaida;
-	}
+    private double sigmoide(double u) {
+        return 1.0 / (1.0 + Math.exp(-u));
+    }
 
-	private void inicializarConexoesSinapticasDaRede() {
-		inicializarConexoesDaPrimeiraCamada();
-		inicializarConexoesDaSegundaCamada();
-	}
+    private double derivada_sigmoide(double v) {
+        return v * (1.0 - v);
+    }
 
-	private void inicializarConexoesDaPrimeiraCamada() {
-		conexoesPrimeiraCamada = new double[nrNeuroniosPrimeiraCamada][nrNeuroniosEntrada];
-		for (int i = 0; i < conexoesPrimeiraCamada.length; i++) {
-			for (int j = 0; j < conexoesPrimeiraCamada[i].length; j++) {
-				conexoesPrimeiraCamada[i][j] = Math.random();
-			}
-		}
-	}
+    private double calcularErro(double valorEsperado, double valorSaida) {
+        return valorEsperado - valorSaida;
+    }
 
-	private void inicializarConexoesDaSegundaCamada() {
-		conexoesSegundaCamada = new double[nrNeuroniosPrimeiraCamada + 1];
-		for (int i = 0; i < conexoesSegundaCamada.length; i++) {
-			conexoesSegundaCamada[i] = Math.random();
-		}
-	}
-	
-	public void imprimirValoresConexoes() {
-		System.out.println("\n Conexoes da primeira camada:");
-		for (int i = 0; i < conexoesPrimeiraCamada.length; i++) {
-			for (int j = 0; j < conexoesPrimeiraCamada[i].length; j++) {
-				System.out.println(conexoesPrimeiraCamada[i][j] + " ");
-			}
-			System.out.println("\n");
-		}
+    private void calcularPesos() {
+        pesos_PrimeiraCamada = new double[numNeuronios_PrimeiraCamada][numNeuronios_Entrada];
+        for (int i = 0; i < pesos_PrimeiraCamada.length; i++) {
+            for (int j = 0; j < pesos_PrimeiraCamada[i].length; j++) {
+                pesos_PrimeiraCamada[i][j] = Math.random();
+            }
+        }
+        
+        pesos_SegundaCamada = new double[numNeuronios_PrimeiraCamada + 1];
+        for (int i = 0; i < pesos_SegundaCamada.length; i++) {
+            pesos_SegundaCamada[i] = Math.random();
+        }
+        
+    }
 
-		System.out.println("\n Conexoes da segunda camada:");
-		for (int i = 0; i < conexoesSegundaCamada.length; i++) {
-			System.out.println(conexoesSegundaCamada[i] + " ");
-		}
+    public void imprimirPesos() {
+        System.out.println("Pesos da primeira camada:");
+        for (int i = 0; i < pesos_PrimeiraCamada.length; i++) {
+            for (int j = 0; j < pesos_PrimeiraCamada[i].length; j++) {
+                System.out.println(pesos_PrimeiraCamada[i][j]);
+            }
+        }
 
-		System.out.println("\n\n");
-	}
+        System.out.println("Pesos da segunda camada:");
+        for (int i = 0; i < pesos_SegundaCamada.length; i++) {
+            System.out.println(pesos_SegundaCamada[i]);
+        }
 
-	public double[][] getConexoesPrimeiraCamada() {
-		return conexoesPrimeiraCamada;
-	}
+    }
 
-	public void setConexoesPrimeiraCamada(double[][] conexoesPrimeiraCamada) {
-		this.conexoesPrimeiraCamada = conexoesPrimeiraCamada;
-	}
-
-	public double[] getConexoesSegundaCamada() {
-		return conexoesSegundaCamada;
-	}
-
-	public void setConexoesSegundaCamada(double[] conexoesSegundaCamada) {
-		this.conexoesSegundaCamada = conexoesSegundaCamada;
-	}
 
 }
