@@ -19,15 +19,13 @@ public class main {
         int numNeuronios_Entrada = 4; //valor fixo
 
         MLP rede_neural = new MLP(numNeuronios_CamadaOculta, numNeuronios_Entrada);
-
         rede_neural.treinar(treino, resultados_esperados);
 
         System.out.println("Numero de epocas: " + rede_neural.num_Epocas());
 
         System.out.println("Organismo 1:");
         rede_neural.classificar(new double[]{5.4, 3.9, 1.7, 0.4});
-
-        /*System.out.println("Organismo 2:");
+        System.out.println("Organismo 2:");
         rede_neural.classificar(new double[]{4.6, 3.4, 1.4, 0.3});
         System.out.println("Organismo 3:");
         rede_neural.classificar(new double[]{5.0, 3.4, 1.5, 0.2});
@@ -91,11 +89,9 @@ public class main {
         rede_neural.classificar(new double[]{6.7, 3.1, 4.7, 1.5});
         System.out.println("Organismo 33:");
         rede_neural.classificar(new double[]{5.8, 2.7, 3.9, 1.2});
-         */
         System.out.println("Organismo 34:");
         rede_neural.classificar(new double[]{6.3, 2.3, 4.4, 1.3});
-
-        /*System.out.println("Organismo 35:");
+        System.out.println("Organismo 35:");
         rede_neural.classificar(new double[]{5.6, 3.0, 4.1, 1.3});
         System.out.println("Organismo 36:");
         rede_neural.classificar(new double[]{5.5, 2.5, 4.0, 1.3});
@@ -106,7 +102,7 @@ public class main {
         System.out.println("Organismo 39:");
         rede_neural.classificar(new double[]{5.8, 2.6, 4.0, 1.2});
         System.out.println("Organismo 40:");
-        rede_neural.classificar(new double[]{7.0, 3.2, 4.7, 1.4});*/
+        rede_neural.classificar(new double[]{7.0, 3.2, 4.7, 1.4});
     }
 
 }

@@ -1,5 +1,6 @@
 
 import java.util.Arrays;
+import java.util.Random;
 
 public class MLP {
 
@@ -16,6 +17,20 @@ public class MLP {
         calcularPesos();
     }
 
+    public double[][] shuffle(double[][] x) {
+
+        Random random = new Random();
+
+        for (int i = 0; i < x.length - 2; i++) {
+            int j = random.nextInt(x.length - 1);
+            double[] temp = x[i];
+            x[i] = x[j];
+            x[j] = temp;
+        }
+
+        return x;
+    }
+
     public void treinar(double[][] conjuntoTreinamento, double[] valoresEsperados) {
         double erro = 1;
         while ((Math.abs(erro) > 0.01) && (epocas < 10000)) {
@@ -26,6 +41,7 @@ public class MLP {
                 double g = gradiente(valorSaida, erro);
                 aprender(conjuntoTreinamento, entradaSegundaCamada, g, i);
             }
+            conjuntoTreinamento = shuffle(conjuntoTreinamento);
             epocas++;
         }
     }
@@ -54,7 +70,7 @@ public class MLP {
 
     private double propagation_SegundaCamada(double[] entradaSegundaCamada) {
         double u = 0;
-        for (int i = 0; i< pesos_SegundaCamada.length; i++) {
+        for (int i = 0; i < pesos_SegundaCamada.length; i++) {
             u += entradaSegundaCamada[i] * pesos_SegundaCamada[i];
         }
         return sigmoide(u);
@@ -82,7 +98,7 @@ public class MLP {
         double[] saidasPrimeiraCamada = new double[numNeuronios_CamadaOculta];
         for (int i = 0; i < pesos_PrimeiraCamada.length; i++) {
             double u = 0;
-            for (int j = 0; j< pesos_PrimeiraCamada[i].length; j++) {
+            for (int j = 0; j < pesos_PrimeiraCamada[i].length; j++) {
                 u += entrada[j] * pesos_PrimeiraCamada[i][j];
             }
             saidasPrimeiraCamada[i] = sigmoide(u);
@@ -133,12 +149,12 @@ public class MLP {
                 pesos_PrimeiraCamada[i][j] = Math.random();
             }
         }
-        
+
         pesos_SegundaCamada = new double[numNeuronios_CamadaOculta + 1];
         for (int i = 0; i < pesos_SegundaCamada.length; i++) {
             pesos_SegundaCamada[i] = Math.random();
         }
-        
+
     }
 
     public void imprimirPesos() {
@@ -155,6 +171,5 @@ public class MLP {
         }
 
     }
-
 
 }
